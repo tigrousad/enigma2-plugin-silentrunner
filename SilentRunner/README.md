@@ -1,4 +1,8 @@
-# SilentRunner
+
+# SilentRunner 🚀
+**A powerful background script execution and management plugin for Enigma2 receivers.**
+> Developed with ❤️ by **tigrousad**
+
 
 **Version:** 1.0.0  
 **Platform:** Enigma2 / OpenATV 7.6+ / Python 3.13+  
