@@ -1,0 +1,13 @@
+Package: enigma2-plugin-extensions-silentrunner
+Version: 1.0.0
+Architecture: all
+Maintainer: SilentRunner Project
+Description: Silent background script manager for Enigma2/OpenATV
+ SilentRunner lets users browse the Linux filesystem and execute
+ Shell (.sh) and Python (.py) scripts silently in the background,
+ without opening any console window.  Running tasks can be monitored
+ and stopped at any time.
+Section: enigma2-plugins
+Priority: optional
+OE: enigma2-plugin-extensions-silentrunner
+License: MIT
