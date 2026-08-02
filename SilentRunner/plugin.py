@@ -1,5 +1,5 @@
 """
-SilentRunner – Enigma2 plugin registration.
+description = "SilentRunner - Background Script Manager by tigrousad"
 """
 
 from Plugins.Plugin import PluginDescriptor
