@@ -239,7 +239,25 @@ download_file() {
 
 verify_checksum() {
   dest="$1"
-  key="${dest#./}"
+  # derive key relative to SilentRunner/ so checksums.json keys match
+  # if dest is under $TMP (e.g., /tmp/SilentRunner/...), strip the prefix and prepend SilentRunner/
+  key=""
+  case "$dest" in
+    "$TMP"/*)
+      rel="${dest#$TMP/}"
+      key="SilentRunner/$rel"
+      ;;
+    */SilentRunner/*)
+      # handle other patterns containing SilentRunner
+      rel="${dest##*/SilentRunner/}"
+      key="SilentRunner/$rel"
+      ;;
+    *)
+      # fallback to basename
+      key="$(basename "$dest")"
+      ;;
+  esac
+
   exp=$(expected_sha_for_path "$key")
   if [ -z "$exp" ]; then
     log "verify_checksum: no expected sha for $key (skipping)"
