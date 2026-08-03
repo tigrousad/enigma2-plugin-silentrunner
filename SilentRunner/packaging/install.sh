@@ -56,42 +56,46 @@ PY
     # 1) Python downloader (recommended when available)
     if command -v python3 >/dev/null 2>&1; then
         echo "[SilentRunner] using python3 downloader for $url"
-        if python3 - "$url" "$tmp" <<'PY'; then
+        # run python code and check exit status explicitly (avoid complex if-with-heredoc in sh)
+        python3 - "$url" "$tmp" <<'PY'
 import sys,ssl,urllib.request,socket
 url=sys.argv[1]
 out=sys.argv[2]
 req=urllib.request.Request(url, headers={'User-Agent':'silent-runner-installer/1.0','Accept-Encoding':'identity','Connection':'close'})
 ctx=ssl.create_default_context()
 # short connect timeout, longer read timeout via socket
-with urllib.request.urlopen(req, context=ctx, timeout=10) as r:
-    raw = getattr(r, 'fp', None)
-    sock = None
-    try:
-        sock = raw.raw._sock
-        sock.settimeout(30)
-    except Exception:
-        pass
-    with open(out, 'wb') as f:
-        while True:
-            chunk = r.read(65536)
-            if not chunk:
-                break
-            f.write(chunk)
-sys.exit(0)
+try:
+    with urllib.request.urlopen(req, context=ctx, timeout=10) as r:
+        raw = getattr(r, 'fp', None)
+        sock = None
+        try:
+            sock = raw.raw._sock
+            sock.settimeout(30)
+        except Exception:
+            pass
+        with open(out, 'wb') as f:
+            while True:
+                chunk = r.read(65536)
+                if not chunk:
+                    break
+                f.write(chunk)
+    sys.exit(0)
+except Exception as e:
+    sys.stderr.write('python downloader error: %s\n' % e)
+    sys.exit(2)
 PY
-        then
-            # python wrote directly to final path (because of how we passed names)
-            # ensure file exists as expected
+        rc=$?
+        if [ $rc -eq 0 ]; then
+            # python wrote to tmp
             if [ -f "$tmp" ] || [ -f "$out" ]; then
                 if [ -f "$out" ] && [ ! -f "$tmp" ]; then
-                    # move final into tmp for verification path
                     mv "$out" "$tmp" || true
                 fi
                 if verify_sha; then mv "$tmp" "$out"; return 0; fi
             fi
             echo "[SilentRunner] python downloader succeeded but sha check failed or file missing" >&2
         else
-            echo "[SilentRunner] python downloader failed, falling back" >&2
+            echo "[SilentRunner] python downloader failed (rc=$rc), falling back" >&2
         fi
     fi
 
