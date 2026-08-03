@@ -8,6 +8,17 @@ BASE="https://raw.githubusercontent.com/tigrousad/enigma2-plugin-silentrunner/ma
 PLUGIN="/usr/lib/enigma2/python/Plugins/Extensions/SilentRunner"
 TMP="/tmp/SilentRunner"
 
+download() {
+    url="$1"
+    out="$2"
+
+    if command -v curl >/dev/null 2>&1; then
+        curl -L --fail --connect-timeout 20 -o "$out" "$url"
+    else
+        wget --no-check-certificate -q -O "$out" "$url"
+    fi
+}
+
 echo "[SilentRunner] Downloading..."
 
 rm -rf "$TMP"
@@ -28,7 +39,7 @@ utils.py \
 version.py \
 plugin.png
 do
-    wget -q -O "$TMP/$f" "$BASE/$f"
+    download "$BASE/$f" "$TMP/$f"
 done
 
 # الأيقونات
@@ -46,15 +57,18 @@ sh.png \
 stopped.png \
 yellow.png
 do
-    wget -q -O "$TMP/icons/$f" "$BASE/icons/$f"
+    download "$BASE/icons/$f" "$TMP/icons/$f"
 done
 
 # locale
-wget -q -O "$TMP/locale/readme.txt" "$BASE/locale/readme.txt"
+download \
+"$BASE/locale/readme.txt" \
+"$TMP/locale/readme.txt"
 
 echo "[SilentRunner] Installing..."
 
 rm -rf "$PLUGIN"
+
 mkdir -p /usr/lib/enigma2/python/Plugins/Extensions
 
 cp -a "$TMP" "$PLUGIN"
