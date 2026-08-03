@@ -13,9 +13,9 @@ download() {
     out="$2"
 
     if command -v curl >/dev/null 2>&1; then
-        curl -L --fail --connect-timeout 20 -o "$out" "$url"
+        curl -L --http1.1 -o "$out" "$url"
     else
-        wget --no-check-certificate -q -O "$out" "$url"
+        wget --no-check-certificate -O "$out" "$url"
     fi
 }
 
@@ -61,14 +61,11 @@ do
 done
 
 # locale
-download \
-"$BASE/locale/readme.txt" \
-"$TMP/locale/readme.txt"
+download "$BASE/locale/readme.txt" "$TMP/locale/readme.txt"
 
 echo "[SilentRunner] Installing..."
 
 rm -rf "$PLUGIN"
-
 mkdir -p /usr/lib/enigma2/python/Plugins/Extensions
 
 cp -a "$TMP" "$PLUGIN"
