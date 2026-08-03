@@ -1,30 +1,38 @@
 #!/bin/sh
-# install.sh – Direct install helper (run ON the receiver via SSH)
-#
-# Copy the SilentRunner directory tree to the receiver first, then run
-# this script from the root of the copied directory.
-#
-# Usage:
-#   scp -r SilentRunner/ root@<receiver-ip>:/tmp/
-#   ssh root@<receiver-ip> "cd /tmp && sh SilentRunner/packaging/install.sh"
+# install.sh – Direct and Remote install helper for SilentRunner
 
 set -e
 
 PLUGIN_DIR="/usr/lib/enigma2/python/Plugins/Extensions/SilentRunner"
-SRCDIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# تحديد مسار الملفات بناءً على طريقة التشغيل (محلية أو مؤقتة)
+if [ -d "$(dirname "$0")/../SilentRunner" ]; then
+    SRCDIR="$(cd "$(dirname "$0")/../SilentRunner" && pwd)"
+elif [ -d "$(dirname "$0")" ] && [ -f "$(dirname "$0")/plugin.py" ]; then
+    SRCDIR="$(cd "$(dirname "$0")" && pwd)"
+else
+    # في حال تم تشغيله مباشرة من مجلد مؤقت أو رابط خارجي
+    SRCDIR="/tmp/SilentRunner"
+fi
 
 echo "[SilentRunner] Installing to $PLUGIN_DIR ..."
 
 mkdir -p "$PLUGIN_DIR/icons" "$PLUGIN_DIR/locale"
 
+# نسخ الملفات الأساسية مع التحقق من وجودها
 for f in __init__.py plugin.py main.py runner.py explorer.py \
           widgets.py skin.py utils.py version.py plugin.png; do
-    cp "$SRCDIR/$f" "$PLUGIN_DIR/$f"
-    echo "  copied $f"
+    if [ -f "$SRCDIR/$f" ]; then
+        cp "$SRCDIR/$f" "$PLUGIN_DIR/$f"
+        echo "  copied $f"
+    fi
 done
 
-cp "$SRCDIR/icons/"*.png "$PLUGIN_DIR/icons/" 2>/dev/null || true
-echo "  copied icons/"
+# نسخ الأيقونات إن وجدت
+if [ -d "$SRCDIR/icons" ]; then
+    cp "$SRCDIR/icons/"*.png "$PLUGIN_DIR/icons/" 2>/dev/null || true
+    echo "  copied icons/"
+fi
 
 echo ""
 echo "[SilentRunner] Installation complete."
