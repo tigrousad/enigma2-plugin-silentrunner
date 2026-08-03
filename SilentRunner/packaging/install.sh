@@ -1,42 +1,76 @@
 #!/bin/sh
-# install.sh – Direct and Remote install helper for SilentRunner
+# SilentRunner Online Installer
 
 set -e
 
-PLUGIN_DIR="/usr/lib/enigma2/python/Plugins/Extensions/SilentRunner"
+BASE="https://raw.githubusercontent.com/tigrousad/enigma2-plugin-silentrunner/main/SilentRunner"
 
-# تحديد مسار الملفات بناءً على طريقة التشغيل (محلية أو مؤقتة)
-if [ -d "$(dirname "$0")/../SilentRunner" ]; then
-    SRCDIR="$(cd "$(dirname "$0")/../SilentRunner" && pwd)"
-elif [ -d "$(dirname "$0")" ] && [ -f "$(dirname "$0")/plugin.py" ]; then
-    SRCDIR="$(cd "$(dirname "$0")" && pwd)"
-else
-    # في حال تم تشغيله مباشرة من مجلد مؤقت أو رابط خارجي
-    SRCDIR="/tmp/SilentRunner"
-fi
+PLUGIN="/usr/lib/enigma2/python/Plugins/Extensions/SilentRunner"
+TMP="/tmp/SilentRunner"
 
-echo "[SilentRunner] Installing to $PLUGIN_DIR ..."
+echo "[SilentRunner] Downloading..."
 
-mkdir -p "$PLUGIN_DIR/icons" "$PLUGIN_DIR/locale"
+rm -rf "$TMP"
+mkdir -p "$TMP"
+mkdir -p "$TMP/icons"
+mkdir -p "$TMP/locale"
 
-# نسخ الملفات الأساسية مع التحقق من وجودها
-for f in __init__.py plugin.py main.py runner.py explorer.py \
-          widgets.py skin.py utils.py version.py plugin.png; do
-    if [ -f "$SRCDIR/$f" ]; then
-        cp "$SRCDIR/$f" "$PLUGIN_DIR/$f"
-        echo "  copied $f"
-    fi
+# الملفات الرئيسية
+for f in \
+__init__.py \
+plugin.py \
+main.py \
+runner.py \
+explorer.py \
+widgets.py \
+skin.py \
+utils.py \
+version.py \
+plugin.png
+do
+    wget -q -O "$TMP/$f" "$BASE/$f"
 done
 
-# نسخ الأيقونات إن وجدت
-if [ -d "$SRCDIR/icons" ]; then
-    cp "$SRCDIR/icons/"*.png "$PLUGIN_DIR/icons/" 2>/dev/null || true
-    echo "  copied icons/"
+# الأيقونات
+for f in \
+blue.png \
+failed.png \
+finished.png \
+folder.png \
+green.png \
+plugin.png \
+py.png \
+red.png \
+running.png \
+sh.png \
+stopped.png \
+yellow.png
+do
+    wget -q -O "$TMP/icons/$f" "$BASE/icons/$f"
+done
+
+# locale
+wget -q -O "$TMP/locale/readme.txt" "$BASE/locale/readme.txt"
+
+echo "[SilentRunner] Installing..."
+
+rm -rf "$PLUGIN"
+mkdir -p /usr/lib/enigma2/python/Plugins/Extensions
+
+cp -a "$TMP" "$PLUGIN"
+
+if command -v python3 >/dev/null 2>&1; then
+    python3 -m compileall "$PLUGIN" >/dev/null 2>&1 || true
 fi
 
+rm -rf "$TMP"
+
+sync
+
 echo ""
-echo "[SilentRunner] Installation complete."
-echo "Restart Enigma2 or reload the plugin list to activate SilentRunner."
+echo "[SilentRunner] Installation completed successfully."
 echo ""
-echo "  killall -HUP enigma2   # soft restart"
-echo "  init 6                 # full reboot"
+echo "Restart Enigma2:"
+echo "killall -HUP enigma2"
+echo "or"
+echo "init 6"
